@@ -1,0 +1,22 @@
+language: cpp
+dist: xenial
+os:
+  - linux
+
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    update: true
+    packages:
+    - gcc
+    - clang
+    - cmake
+
+script:
+  - mkdir cmake-build-debug
+  - cd cmake-build-debug
+  - cmake .. -DCMAKE_BUILD_TYPE=Debug
+  - cmake --build .
