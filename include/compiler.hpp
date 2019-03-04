@@ -9,6 +9,13 @@
 #include <istream>
 #include "image.hpp"
 
+const char *const FORMAT_NAMES[4][4] = {
+        "bf", "bfk", "brainfuck", "source",
+        "bfa", "asm", "s", "assembly",
+        "hex", "c", "cpp", "hex",
+        "bfi", "img", "bin", "binary"
+};
+
 class Compiler {
 public:
     enum class Format {
@@ -21,30 +28,26 @@ public:
     Compiler() = default;
     void Compile(std::fstream &in, Format inf, std::fstream &out, Format of);
 
-    bool ExtendedCommands(){ return extendedCommands; }
     bool OptimizeClearing(){ return optimizeClearing; }
     bool OptimizeJoining(){ return optimizeJoining; }
-    bool OptimizeJoiningCtrlio(){ return optimizeJoiningCtrlio; }
 
-    void ExtendedCommands(bool v) { extendedCommands = v; }
     void OptimizeClearing(bool v) { optimizeClearing = v; }
     void OptimizeJoining(bool v) { optimizeJoining = v; }
-    void OptimizeJoiningCtrlio(bool v) { optimizeJoiningCtrlio = v; }
 
 private:
     void WriteSource(std::vector<Command>& output, std::fstream &out);
     void WriteHex(std::vector<Command>& output, std::fstream &out);
     void WriteAssembly(std::vector<Command>& output, std::fstream &out);
+    void ReadAssembly(std::vector<Command>& output, std::fstream &in);
 
     void Translate(std::istream &in, std::vector<Command>& output);
     void Linking(std::vector<Command>& output);
     void OptimizeClear(std::vector<Command> &output);
 
-    bool IsSymbol(char ch);
     void FindLoopEnd(std::vector<Command> &Output, size_t CurrentIp);
 
 private:
-    bool extendedCommands = false, optimizeClearing = false, optimizeJoining = false, optimizeJoiningCtrlio = false;
+    bool optimizeClearing = false, optimizeJoining = false;
 
 };
 

@@ -9,15 +9,6 @@
 
 
 Command::Command(uint16_t _bin){
-    /* 000 - +-, if - bit 12 = 1
-     * 001 - <>, if > bit 12 = 1
-     * 010 - Console Input
-     * 011 - Console Output
-     * 100 - JZ
-     * 101 - JNZ
-     * 110 - LD_IP
-     * 111 - LD_AP
-     * */
     bias = bflang::COMMAND_BIAS(_bin);
     switch (bflang::COMMAND_ID(_bin)){
         case bflang::ADD:
@@ -38,6 +29,8 @@ Command::Command(uint16_t _bin){
 
         case bflang::CTRLIO:
             cmd = ' ';
+            if (bflang::IS_NOP(static_cast<uint16_t>(bias)))
+                return;
             if (bias & bflang::CIN)
                 cmd = ',';
             if (bias & bflang::COUT)
@@ -126,7 +119,7 @@ void Command::fixBias() {
             bias = bflang::COUT | 0x1000;
             break;
         case ',':
-            bias = bflang::CIN | 0x1000;
+            bias = bflang::CIN | bflang::SYNC | 0x1000;
             break;
         default:break;
     }

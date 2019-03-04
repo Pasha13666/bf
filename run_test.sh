@@ -9,7 +9,7 @@ fi
 rm -rf cmake-build-debug/tests tests.log
 mkdir -p cmake-build-debug/tests
 
-for n in tests/*.bf; do
+for n in tests/*.*; do
     i="`basename "$n"`"
     echo "---- Compiling '$i'..." >>tests.log
     ./cmake-build-debug/bf bfpp -i "tests/$i" -o "cmake-build-debug/tests/$i.bfi" -O 2 >>tests.log 2>&1

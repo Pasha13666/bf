@@ -42,12 +42,12 @@ namespace bflang {
     const uint16_t ADA    = 0b010;
     const uint16_t JZ     = 0b011;
     const uint16_t JNZ    = 0b100; // 5..6 free
-    const uint16_t HALT   = 0b111;
+    const uint16_t HALT   = 0b111; // TODO: Remove
 
     // CTRLIO bits
-    const int COUT = 1U << 1; // cin?
-    const int CIN = 1U << 2; // cout?
-    const int SYNC = 1U << 3;
+    const int COUT = 1U << 1;
+    const int CIN = 1U << 2;
+    const int SYNC = 1U << 3; // Synchronous input - CIN | SYNC
     const int CLR_DATA = 1U << 4;
     const int CLR_AP = 1U << 5;
     const int M8 = 1U << 9;

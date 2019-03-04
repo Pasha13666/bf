@@ -3,20 +3,27 @@
 #include <fstream>
 #include <compiler.hpp>
 #include <emulator.hpp>
+#include <filesystem>
+
+Compiler::Format detect_format(const std::string &s) {
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            if (s == FORMAT_NAMES[i][j])
+                return Compiler::Format(i);
+
+    throw std::runtime_error("Unknown file format '" + s + "'");
+}
 
 int compiler_main(int argc, char **argv) {
     cxxopts::Options options("bfpp", "Brainfuck++ compiler");
     options.add_options()
             ("O,optimize", "Optimization level (default is 1)", cxxopts::value<unsigned int>()->default_value("1"))
-            ("o,output", "Output file", cxxopts::value<std::string>()->default_value("a.out"))
-            ("i,input", "Input file", cxxopts::value<std::string>())
-            ("e,extended", "Enable extended instruction set")
-            ("S,asm", "Write assembly file")
-            ("H,hex", "Write opcodes in hex")
-            ("d,debug", "Write debug information")
+            ("o,output", "Output file", cxxopts::value<std::filesystem::path>()->default_value("a.bin"))
+            ("i,input", "Input file", cxxopts::value<std::filesystem::path>())
+            ("X,output-format", "Format of output file", cxxopts::value<std::string>())
+            ("I,input-format", "Format of input file", cxxopts::value<std::string>())
             ("v,verbose", "Produce more output")
-            ("h,help", "Show this message")
-            ("l,loop-shifting", "Loop shifting on debug");
+            ("h,help", "Show this message");
 
     options.show_positional_help();
     try {
@@ -28,26 +35,13 @@ int compiler_main(int argc, char **argv) {
             return 0;
         }
 
-        bool out_asm = result["asm"].as<bool>();
-        bool out_hex = result["hex"].as<bool>();
-        Compiler::Format of = Compiler::Format::IMAGE;
-        if (out_asm)
-            of = Compiler::Format::ASSEMBLY;
-        if (out_hex)
-            of = Compiler::Format::HEX;
-
-        if (out_asm && out_hex) {
-            std::cerr << "Options --asm and --hex present together" << std::endl;
-            return -1;
-        }
-
-        std::fstream input(result["input"].as<std::string>(), std::ios::in);
+        std::fstream input(result["input"].as<std::filesystem::path>(), std::ios::in);
         if (!input.good()) {
             std::cerr << "Cannot read input file" << std::endl;
             return 1;
         }
 
-        std::fstream output(result["output"].as<std::string>(), std::ios::out);
+        std::fstream output(result["output"].as<std::filesystem::path>(), std::ios::out);
         if (!output.good()) {
             std::cerr << "Cannot write output file" << std::endl;
             return 1;
@@ -55,8 +49,6 @@ int compiler_main(int argc, char **argv) {
 
         switch (result["optimize"].as<unsigned int>()) {
             default:
-            case 3:
-                c.OptimizeJoiningCtrlio(true);
             case 2:
                 c.OptimizeClearing(true);
             case 1:
@@ -65,12 +57,19 @@ int compiler_main(int argc, char **argv) {
                 break;
         }
 
-        if (result["extended"].as<bool>())
-            c.ExtendedCommands(true);
+        Compiler::Format inf, of;
 
-        // debug, verbose, loop-shifting
+        if (result.count("input-format") != 0)
+            inf = detect_format(result["input-format"].as<std::string>());
+        else inf = detect_format(result["input"].as<std::filesystem::path>().extension().string().substr(1));
 
-        c.Compile(input, Compiler::Format::SOURCE, output, of);
+        if (result.count("output-format") != 0)
+            of = detect_format(result["output-format"].as<std::string>());
+        else of = detect_format(result["output"].as<std::filesystem::path>().extension().string().substr(1));
+
+        // verbose
+
+        c.Compile(input, inf, output, of);
 
     } catch (cxxopts::OptionException &e) {
         std::cerr << e.what() << std::endl;
@@ -86,7 +85,7 @@ int compiler_main(int argc, char **argv) {
 }
 
 int emulator_main(int argc, char **argv) {
-    cxxopts::Options options("bfpp", "Brainfuck++ emulator");
+    cxxopts::Options options("bfrun", "Brainfuck++ emulator");
     options.add_options()
             ("i,input", "Input file", cxxopts::value<std::string>())
             ("w,8bit", "Force 8 bit mode")

@@ -9,13 +9,11 @@ Another impementation of [@radiolok's bfutils](https://github.com/radiolok/bfuti
 #### Compiler
 
 - [X] Cell clearing optimization
-- [ ] Joining CTRLIO commaind
-- [ ] Verbose output support
-- [ ] Debugging support
-- [ ] loop-shifting
-- [ ] Generating HEX files.
+- [X] Generating HEX files.
+- [X] Binary-to-binary compiling support.
+- [X] Compiling assembly files
 - [ ] Generating assembly files.
-- [ ] Binary-to-binary compiling support.
+- [ ] Verbose output support
 - [ ] Options for controlling code base address.
 
 #### Emulator
@@ -34,17 +32,22 @@ Brainfuck++ compiler
 Usage:
   bfpp [OPTION...]
 
-  -O, --optimize arg   Optimization level (default is 1) (default: 1)
-  -o, --output arg     Output file (default: a.out)
-  -i, --input arg      Input file
-  -e, --extended       Enable extended instruction set
-  -S, --asm            Write assembly file
-  -H, --hex            Write opcodes in hex
-  -d, --debug          Write debug information
-  -v, --verbose        Produce more output
-  -h, --help           Show this message
-  -l, --loop-shifting  Loop shifting on debug
+  -O, --optimize arg       Optimization level (default is 1) (default: 1)
+  -o, --output arg         Output file (default: a.bin)
+  -i, --input arg          Input file
+  -X, --output-format arg  Format of output file
+  -I, --input-format arg   Format of input file
+  -v, --verbose            Produce more output
+  -h, --help               Show this message
+
 ```
+
+Supported values for `--input-format` and `--output-format`:
+
+ - Brainfuck source file - bf, bfk, brainfuck, source
+ - Assembly file - bfa, asm, s, assembly
+ - Hex file (output only) - hex, c, cpp
+ - Brainfuck++ binary file - bfi, img, bin, binary
 
 ## Bfrun
 
@@ -67,3 +70,21 @@ Usage:
 
 Comparable with [@radiolok's bfpp binary files](https://github.com/radiolok/bfutils#binary).
 
+
+Assembly support, file format autodetecting, fixes
+
+Common:
+ - CTRLIO.SYNC | CTRLIO.CIN for synchronous input (by default)
+ - Unsupported HALT marked to remove
+ - Not using IpEntry/ApEntry - not supported by HW
+ -
+
+Compiler:
+ - Input/output file format autodetecting and new CLI options to override it
+ - Removed extended commands support
+ - Removed CTRLIO optimization (not supported by HW)
+ - Reading (basic) assembly files
+ - Support for writing hex files
+
+Emulator:
+ - Incrementing IP before command execution - as by HW

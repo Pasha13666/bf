@@ -4,14 +4,20 @@
 //
 
 #include <compiler.hpp>
+#include <iomanip>
 
 inline bool IsJoinable(char cmd) {
     return cmd == '+' || cmd == '-' || cmd == '<' || cmd == '>';
 }
 
+inline bool IsSymbol(char ch) {
+    return (ch == '<') || (ch == '>') || (ch == '+') || (ch == '-')
+           || (ch == '[') || (ch == ']') || (ch == '.') || (ch == ',');
+}
+
 void Compiler::Translate(std::istream &in, std::vector<Command> &output) {
-    //output.emplace_back(' ', 0);
-    //output.emplace_back('>', 0x0800);
+    output.emplace_back(' ', 0);
+    output.emplace_back('>', 0x0800);
 
     size_t CurrentBias = 0;
     int cmd, next_cmd;
@@ -41,22 +47,12 @@ void Compiler::Translate(std::istream &in, std::vector<Command> &output) {
     output.emplace_back('H', 0x00);
 }
 
-bool Compiler::IsSymbol(char ch) {
-    return (ch == '<') || (ch == '>') || (ch == '+') || (ch == '-')
-           || (ch == '[') || (ch == ']') || (ch == '.') || (ch == ',')
-           || (extendedCommands && ((ch == 'A') || (ch == 'D') || (ch == 'L') || (ch == 'F')
-                                    || (ch == 'H') || (ch == 'S') || (ch == '~')));
-}
-
 void Compiler::Linking(std::vector<Command> &output) {
-//Let's Get Pointers for loops:
-    //[ should get shift > 0
-    //] should get shift < 0
     size_t CurrentIp = 0;
     size_t MaxIp = output.size();
 
     for (CurrentIp = 0; CurrentIp < MaxIp; CurrentIp++)
-        if (output[CurrentIp].CmdChar() == '[')
+        if (output[CurrentIp].CmdChar() == '[' && output[CurrentIp].Bias() == 0)
             FindLoopEnd(output, CurrentIp);
 }
 
@@ -87,8 +83,7 @@ void Compiler::FindLoopEnd(std::vector<Command> &output, size_t CurrentIp) {
 
 void Compiler::OptimizeClear(std::vector<Command> &output) {
     for (auto i = output.begin(); i != output.end(); i++) {
-        if (optimizeClearing
-            && i->CmdChar() == '['
+        if (i->CmdChar() == '['
             && output.end() - i >= 2
             && (i + 1)->CmdChar() == '+'
             && (i + 2)->CmdChar() == ']') {
@@ -96,20 +91,12 @@ void Compiler::OptimizeClear(std::vector<Command> &output) {
             output.erase(i, i + 3);
             output.insert(i, Command{'D'});
         }
-
-        if (optimizeJoiningCtrlio
-            && bflang::COMMAND_ID(i->GetCmd()) == bflang::CTRLIO) {
-            // TODO: Join ctrlio commands
-        }
     }
 }
 
 void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out, Compiler::Format of) {
     if (inf == Format::HEX)
         throw std::runtime_error("Cannot use hex file as input");
-
-    if (inf == Format::ASSEMBLY)
-        throw std::runtime_error("Reading assembly is not implemented");
 
     if (inf == Format::IMAGE && of != Format::IMAGE)
         throw std::runtime_error("Image can be converted only to image");
@@ -123,8 +110,12 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
 
     std::vector<Command> commands;
 
-    Translate(in, commands);
-    if (optimizeClearing || optimizeJoining)
+    if (inf == Format::ASSEMBLY)
+        ReadAssembly(commands, in);
+    else
+        Translate(in, commands);
+
+    if (optimizeClearing)
         OptimizeClear(commands);
     Linking(commands);
 
@@ -144,8 +135,7 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
     }
 
     BfppImage img(0);
-    BfppSection code(commands, 0x800, static_cast<uint16_t>(commands.size() * 2));
-    img.IpEntry(0x800);
+    BfppSection code(commands, 0, static_cast<uint16_t>(commands.size() * 2));
     img.AddSection(code);
     img.Write(out);
 }
@@ -183,10 +173,22 @@ void Compiler::WriteSource(std::vector<Command> &output, std::fstream &out) {
 }
 
 void Compiler::WriteHex(std::vector<Command> &output, std::fstream &out) {
+    size_t ip = 0;
+    size_t align = 0;
 
-}
+    out << "uint16_t application[] = {\n";
+    for (auto &cmd : output) {
+        if (ip != 0)
+            out << ", ";
 
-void Compiler::WriteAssembly(std::vector<Command> &output, std::fstream &out) {
-
+        if (align == 10) {
+            out << "\n";
+            align = 0;
+        }
+        out << "0x" << std::setfill('0') << std::setw(4) << std::hex << cmd.GetCmd();
+        align++;
+        ip++;
+    }
+    out << "};";
 }
 

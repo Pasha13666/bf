@@ -30,6 +30,7 @@ void Emulator::Run() {
     }
 
     while (true) {
+        ip++; // Note this
         uint16_t cmd = memory[ip];
         uint16_t bias = bflang::COMMAND_BIAS(cmd);
         uint16_t id = bflang::COMMAND_ID(cmd);
@@ -75,12 +76,8 @@ ip_ok:
                 if (bias & bflang::COUT)
                     putchar(memory[ap] & 0xFF);
 
-                if (bias & bflang::CIN)
+                if (bias & bflang::CIN || bias & bflang::SYNC)
                     memory[ap] = getchar() & 0xFF;
-
-                if (bias & bflang::SYNC) {
-                    // TODO: SYNC
-                }
 
                 if (bias & bflang::CLR_DATA)
                     memory[ap] = 0;
@@ -123,7 +120,6 @@ ip_ok:
         }
 
         executedInstructions++;
-        ip++;
     }
 
 end:;
