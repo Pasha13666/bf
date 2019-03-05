@@ -3,7 +3,7 @@
 // Created by pasha on 03.03.19.
 //
 
-#include <emulator.hpp>
+#include "emulator.hpp"
 
 Emulator::Emulator(const BfppImage &img) : image(img) {
     wordMode = image.Machine() == 1; // TODO: WordMode
@@ -113,8 +113,6 @@ ip_ok:
                 if ((memory[ap] & jumpMask) != 0)
                     ip += bias;
                 break;
-            case bflang::HALT:
-                goto end;
             default:
                 throw std::runtime_error("Unknown opcode");
         }

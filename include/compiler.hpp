@@ -6,7 +6,7 @@
 #ifndef BF_COMPILER_HPP
 #define BF_COMPILER_HPP
 
-#include <istream>
+#include <fstream>
 #include "image.hpp"
 
 const char *const FORMAT_NAMES[4][4] = {

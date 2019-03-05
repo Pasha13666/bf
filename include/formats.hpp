@@ -9,11 +9,10 @@
 #include <cstdint>
 
 #define SWAP_ENDIANNESS 1
-//#define HALT_INSTR
 
 namespace bflang {
     const char *const CMD_NAMES[] = {
-            "CIO", "ADD", "ADA", "JZ", "JNZ", "u5", "u6", "HALT"
+            "CIO", "ADD", "ADA", "JZ", "JNZ", "u5", "u6"
     };
 
     const char *const CTRLIO_CMD_NAMES[] = {
@@ -42,7 +41,6 @@ namespace bflang {
     const uint16_t ADA    = 0b010;
     const uint16_t JZ     = 0b011;
     const uint16_t JNZ    = 0b100; // 5..6 free
-    const uint16_t HALT   = 0b111; // TODO: Remove
 
     // CTRLIO bits
     const int COUT = 1U << 1;

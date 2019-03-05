@@ -2,8 +2,8 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // Created by pasha on 03.03.19.
 //
-
-#include <compiler.hpp>
+#include "compiler.hpp"
+#include "assembly.hpp"
 #include <iomanip>
 
 inline bool IsJoinable(char cmd) {
@@ -16,7 +16,6 @@ inline bool IsSymbol(char ch) {
 }
 
 void Compiler::Translate(std::istream &in, std::vector<Command> &output) {
-    output.emplace_back(' ', 0);
     output.emplace_back('>', 0x0800);
 
     size_t CurrentBias = 0;
@@ -109,11 +108,12 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
     }
 
     std::vector<Command> commands;
+    commands.emplace_back(' ', 0);
 
-    if (inf == Format::ASSEMBLY)
-        ReadAssembly(commands, in);
-    else
-        Translate(in, commands);
+    if (inf == Format::ASSEMBLY) {
+        AssemblyParser p {};
+        p.Parse(commands, in);
+    } else Translate(in, commands);
 
     if (optimizeClearing)
         OptimizeClear(commands);
@@ -145,7 +145,6 @@ void Compiler::WriteSource(std::vector<Command> &output, std::fstream &out) {
         char ch = i.CmdChar();
         switch (i.Id()) {
             case bflang::CTRLIO:
-            case bflang::HALT:
             case bflang::JZ:
             case bflang::JNZ:
                 out << ch;

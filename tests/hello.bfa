@@ -1,8 +1,7 @@
-NOP
-ADA 0x800
-
-ADD 10
-LOOP
+ADA 0x800 # test
+##
+ADD 10#
+LOOP###
     ADA
     ADD 7
     ADA
@@ -13,7 +12,7 @@ LOOP
     ADD
     SUBA 4
     SUB
-END
+ENDL
 
 ADA
 ADD 2

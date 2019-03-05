@@ -1,0 +1,17 @@
+# Выводит "!>"
+
+ada 0x800
+
+jz .test
+
+label test2
+add 29
+cout
+HALT
+
+label test
+add 33
+cout
+jnz .test2
+
+HALT

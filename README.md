@@ -69,22 +69,3 @@ Usage:
 ## Brainfuck++ binary format
 
 Comparable with [@radiolok's bfpp binary files](https://github.com/radiolok/bfutils#binary).
-
-
-Assembly support, file format autodetecting, fixes
-
-Common:
- - CTRLIO.SYNC | CTRLIO.CIN for synchronous input (by default)
- - Unsupported HALT marked to remove
- - Not using IpEntry/ApEntry - not supported by HW
- -
-
-Compiler:
- - Input/output file format autodetecting and new CLI options to override it
- - Removed extended commands support
- - Removed CTRLIO optimization (not supported by HW)
- - Reading (basic) assembly files
- - Support for writing hex files
-
-Emulator:
- - Incrementing IP before command execution - as by HW

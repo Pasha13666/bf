@@ -2,10 +2,8 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // Created by pasha on 03.03.19.
 //
-#include <command.hpp>
-#include <formats.hpp>
-
 #include "command.hpp"
+#include "formats.hpp"
 
 
 Command::Command(uint16_t _bin){
@@ -22,9 +20,6 @@ Command::Command(uint16_t _bin){
             break;
         case bflang::JNZ:
             cmd = ']';
-            break;
-        case bflang::HALT:
-            cmd = 'H';
             break;
 
         case bflang::CTRLIO:
@@ -68,6 +63,10 @@ Command::Command(char _cmd, int16_t _bias) : cmd(_cmd), bias(_bias) {
     fixBias();
 }
 
+Command::Command(char _cmd, std::string label) : cmd(_cmd), label(std::move(label)) {
+    fixBias();
+}
+
 uint16_t Command::Id(){
     switch (cmd){
         case '>':
@@ -78,10 +77,6 @@ uint16_t Command::Id(){
             return bflang::JZ;
         case ']':
             return bflang::JNZ;
-#ifdef HALT_INSTR
-        case 'H':
-            return bflang::HALT;
-#endif
         default:
             return bflang::CTRLIO;
     }
@@ -108,12 +103,11 @@ void Command::fixBias() {
         case 'S':
             bias = bflang::SYNC | 0x1000;
             break;
+        case 's':
+            bias = bflang::CIN | 0x1000;
+            break;
         case 'H':
-#ifdef HALT_INSTR
-            bias = 0x1000;
-#else
             bias = bflang::CHALT | 0x1000;
-#endif
             break;
         case '.':
             bias = bflang::COUT | 0x1000;

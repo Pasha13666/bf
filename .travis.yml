@@ -5,18 +5,21 @@ os:
 
 compiler:
   - gcc
-  - clang
 
 addons:
   apt:
     update: true
+    sources:
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
     packages:
-    - gcc
-    - clang
+    - gcc-8
     - cmake
+
+before_install:
+  - eval "CC=gcc-8 && CXX=g++-8"
 
 script:
   - mkdir cmake-build-debug
   - cd cmake-build-debug
   - cmake .. -DCMAKE_BUILD_TYPE=Debug
-  - cmake --build .
+  - cmake --build . -- VERBOSE=1

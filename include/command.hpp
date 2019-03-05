@@ -13,6 +13,7 @@ class Command {
 private:
     char cmd;
     int16_t bias;
+    std::string label;
 
     void fixBias();
 
@@ -20,9 +21,13 @@ public:
     explicit Command(uint16_t _bin);
     explicit Command(char _cmd);
     Command (char _cmd, int16_t _bias);
+    Command (char _cmd, std::string label);
 
     void Bias(int16_t _bias){bias = _bias;};
     int16_t Bias(){return bias;};
+
+    void Label(std::string l){label = std::move(l);};
+    std::string Label(){return label;};
 
     char CmdChar(){return cmd;};
     uint16_t GetCmd();

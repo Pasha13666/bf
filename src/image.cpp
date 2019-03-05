@@ -2,8 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // Created by pasha on 03.03.19.
 //
-#include <cstring>
-#include <image.hpp>
+#include "image.hpp"
 
 #ifndef SWAP_ENDIANNESS
 
