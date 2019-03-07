@@ -5,8 +5,8 @@
 
 #include "emulator.hpp"
 
-Emulator::Emulator(const BfppImage &img) : image(img) {
-    wordMode = image.Machine() == 1; // TODO: WordMode
+Emulator::Emulator(const Image &img) : image(img) {
+    machine = image.Machine();
     ip = image.IpEntry();
     ap = image.ApEntry();
 
@@ -15,16 +15,16 @@ Emulator::Emulator(const BfppImage &img) : image(img) {
 }
 
 void Emulator::Run() {
-    auto jumpMask = static_cast<uint16_t>(wordMode? 0xFFFF: 0xFF);
+    auto jumpMask = static_cast<uint16_t>(machine == binary::MACHINE_16BIT? 0xFFFF: 0xFF);
     unsigned long long executedInstructions = 0;
     if (debug) {
         fprintf(stderr, "Sections: \n");
         for (uint8_t i = 0; i < image.SectionNum(); ++i) {
-            BfppSection &s = image.Section(i);
-            fprintf(stderr, "%s: 0x%.4x - 0x%.4x\n", s.Type() == bflang::SECTION_CODE? "Code": "Data", s.MemoryBase(),
+            Section &s = image.GetSection(i);
+            fprintf(stderr, "%s: 0x%.4x - 0x%.4x\n", s.Type() == binary::SECTION_CODE? "Code": "Data", s.MemoryBase(),
                     s.MemoryBase() + s.MemorySize());
         }
-        fprintf(stderr, "WordMode = %i, ProtectedMode = %i, starting emulator...\n", wordMode, protectedMode);
+        fprintf(stderr, "WordMode = %i, ProtectedMode = %i, starting emulator...\n", machine, protectedMode);
         fprintf(stderr, " IP   AP  *AP    CMD  BIAS\n");
         fprintf(stderr, "%.4x %.4x %.4x\n", ip, ap, memory[ap]);
     }
@@ -32,21 +32,21 @@ void Emulator::Run() {
     while (true) {
         ip++; // Note this
         uint16_t cmd = memory[ip];
-        uint16_t bias = bflang::COMMAND_BIAS(cmd);
-        uint16_t id = bflang::COMMAND_ID(cmd);
+        uint16_t bias = bytecode::COMMAND_BIAS(cmd);
+        auto id = bytecode::COMMAND_ID(cmd);
 
         if (protectedMode) {
             for (uint8_t i = 0; i < image.SectionNum(); ++i) {
-                auto &s = image.Section(i);
-                if (s.Type() == bflang::SECTION_CODE && ip >= s.MemoryBase() && ip < s.MemoryBase() + s.MemorySize())
+                auto &s = image.GetSection(i);
+                if (s.Type() == binary::SECTION_CODE && ip >= s.MemoryBase() && ip < s.MemoryBase() + s.MemorySize())
                     goto ip_ok;
             }
             fprintf(stderr, "Memory access violation: trying to execute data.\n");
             goto end;
 ip_ok:
             for (uint8_t i = 0; i < image.SectionNum(); ++i) {
-                auto &s = image.Section(i);
-                if (s.Type() == bflang::SECTION_CODE && ap >= s.MemoryBase() && ap < s.MemoryBase() + s.MemorySize()) {
+                auto &s = image.GetSection(i);
+                if (s.Type() == binary::SECTION_CODE && ap >= s.MemoryBase() && ap < s.MemoryBase() + s.MemorySize()) {
                     fprintf(stderr, "Memory access violation: AP points to code.\n");
                     fprintf(stderr, "Note: Ignore this error if program works normally without --protected option.\n");
                     goto end;
@@ -55,61 +55,68 @@ ip_ok:
         }
 
         if (debug) {
-            fprintf(stderr, "%.4x %.4x %.4x   %-4s", ip, ap, memory[ap], bflang::CMD_NAMES[id]);
+            fprintf(stderr, "%.4x %.4x %.4x   %-4s", ip, ap, memory[ap], bytecode::CMD_NAMES[(int)id]);
 
-            if (id != bflang::CTRLIO)
+            if (id != bytecode::CommandId::CTRLIO)
                 fprintf(stderr, " %4i", *reinterpret_cast<int16_t*>(&bias));
-            else if (bflang::IS_NOP(bias))
-                fprintf(stderr, " NOP");
             else
                 for (int i = 0; i < 12; ++i)
                     if (bias & (1U << i))
-                        fprintf(stderr, " %s", bflang::CTRLIO_CMD_NAMES[i]);
+                        fprintf(stderr, " %s", bytecode::CTRLIO_BITS_NAMES[i]);
             fprintf(stderr, "\n");
         }
 
         switch (id) {
-            case bflang::CTRLIO:
-                if (bflang::IS_NOP(bias))
-                    break;
+            case bytecode::CommandId::CTRLIO:
 
-                if (bias & bflang::COUT)
-                    putchar(memory[ap] & 0xFF);
+                switch (bytecode::CTRLIO_BIT(bias)) {
+                    case bytecode::CtrlioBits::NOP:break;
 
-                if (bias & bflang::CIN || bias & bflang::SYNC)
-                    memory[ap] = getchar() & 0xFF;
+                    case bytecode::CtrlioBits::COUT:
+                        putchar(memory[ap] & 0xFF);
+                        break;
 
-                if (bias & bflang::CLR_DATA)
-                    memory[ap] = 0;
+                    case bytecode::CtrlioBits::CIN:
+                        memory[ap] = getchar() & 0xFF;
+                        break;
 
-                if (bias & bflang::CLR_AP)
-                    ap = 0;
+                    case bytecode::CtrlioBits::SYNC:
+                        memory[ap] = getchar() & 0xFF;
+                        break;
 
-                if (bias & bflang::M8) {
-                    wordMode = false;
-                    jumpMask = 0xff;
+                    case bytecode::CtrlioBits::CLR_DATA:
+                        memory[ap] = 0;
+                        break;
+
+                    case bytecode::CtrlioBits::CLR_AP:
+                        ap = 0;
+                        break;
+
+                    case bytecode::CtrlioBits::M8:
+                        machine = binary::MACHINE_8BIT;
+                        jumpMask = 0xff;
+                        break;
+
+                    case bytecode::CtrlioBits::M16:
+                        machine = binary::MACHINE_16BIT;
+                        jumpMask = 0xffff;
+                        break;
+
+                    case bytecode::CtrlioBits::HALT:
+                        goto end;
                 }
-
-                if (bias & bflang::M16) {
-                    wordMode = true;
-                    jumpMask = 0xffff;
-                }
-
-                if (bias & bflang::CHALT)
-                    goto end;
-
                 break;
-            case bflang::ADD:
+            case bytecode::CommandId::ADD:
                 memory[ap] += bias;
                 break;
-            case bflang::ADA:
+            case bytecode::CommandId::ADA:
                 ap += bias;
                 break;
-            case bflang::JZ:
+            case bytecode::CommandId::JZ:
                 if ((memory[ap] & jumpMask) == 0)
                     ip += bias;
                 break;
-            case bflang::JNZ:
+            case bytecode::CommandId::JNZ:
                 if ((memory[ap] & jumpMask) != 0)
                     ip += bias;
                 break;

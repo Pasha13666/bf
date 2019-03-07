@@ -28,31 +28,31 @@ inline void swapLEtoBEa(void *a, size_t size) {
 
 #endif
 
-BfppSection::BfppSection(std::vector<Command> &SectionCmd, uint16_t MemoryBase, uint16_t MemorySize) {
+Section::Section(std::vector<Command> &SectionCmd, uint16_t MemoryBase, uint16_t MemorySize) {
     Hdr.MemoryBase = MemoryBase;
     Hdr.MemorySize = MemorySize;
     Hdr.FileSize = static_cast<uint16_t>(SectionCmd.size() * sizeof(uint16_t));
-    Hdr.type = bflang::SECTION_CODE;
+    Hdr.type = binary::SECTION_CODE;
 
     if (Hdr.FileSize != 0)
         for (auto &cmd : SectionCmd)
             Data.push_back(cmd.GetCmd());
 }
 
-BfppSection::BfppSection(std::vector<uint16_t> &SectionData, uint16_t MemoryBase, uint16_t MemorySize) {
+Section::Section(std::vector<uint16_t> &SectionData, uint16_t MemoryBase, uint16_t MemorySize) {
     Hdr.MemoryBase = MemoryBase;
     Hdr.MemorySize = MemorySize;
     Hdr.FileSize = static_cast<uint16_t>(SectionData.size() * sizeof(uint16_t));
-    Hdr.type = bflang::SECTION_DATA;
+    Hdr.type = binary::SECTION_DATA;
 
     if (Hdr.FileSize != 0)
         for (auto &byte : SectionData)
             Data.push_back(byte);
 }
 
-BfppSection::BfppSection(std::fstream &File) {
-    File.read(reinterpret_cast<char *>(&Hdr), sizeof(bflang::BfppSection));
-    swapLEtoBEa(&Hdr, sizeof(bflang::BfppSection));
+Section::Section(std::fstream &File) {
+    File.read(reinterpret_cast<char *>(&Hdr), sizeof(binary::Section));
+    swapLEtoBEa(&Hdr, sizeof(binary::Section));
 
     std::streampos Image_pos = File.tellg();
 
@@ -66,15 +66,15 @@ BfppSection::BfppSection(std::fstream &File) {
     File.seekg(Image_pos);
 }
 
-void BfppSection::WriteHeader(std::fstream &File) {
+void Section::WriteHeader(std::fstream &File) {
     Hdr.FileBase = static_cast<uint16_t>(File.tellp()); // XXX: ???
 
-    swapLEtoBEa(&Hdr, sizeof(bflang::BfppSection));
-    File.write(reinterpret_cast<char *>(&Hdr), sizeof(bflang::BfppSection));
-    swapLEtoBEa(&Hdr, sizeof(bflang::BfppSection));
+    swapLEtoBEa(&Hdr, sizeof(binary::Section));
+    File.write(reinterpret_cast<char *>(&Hdr), sizeof(binary::Section));
+    swapLEtoBEa(&Hdr, sizeof(binary::Section));
 }
 
-void BfppSection::WriteData(std::fstream &File) {
+void Section::WriteData(std::fstream &File) {
     std::streampos FileBase = File.tellp();
     // Valgrind says:
     //   Syscall param write(buf) points to uninitialised byte(s)
@@ -84,9 +84,9 @@ void BfppSection::WriteData(std::fstream &File) {
     File.seekg(Hdr.FileBase);
     Hdr.FileBase = static_cast<uint16_t>(FileBase); // XXX: ???
 
-    swapLEtoBEa(&Hdr, sizeof(bflang::BfppSection));
-    File.write(reinterpret_cast<char *>(&Hdr), sizeof(bflang::BfppSection));
-    swapLEtoBEa(&Hdr, sizeof(bflang::BfppSection));
+    swapLEtoBEa(&Hdr, sizeof(binary::Section));
+    File.write(reinterpret_cast<char *>(&Hdr), sizeof(binary::Section));
+    swapLEtoBEa(&Hdr, sizeof(binary::Section));
 
     File.seekg(FileBase);
 
@@ -98,41 +98,41 @@ void BfppSection::WriteData(std::fstream &File) {
     }
 }
 
-BfppImage::BfppImage(std::fstream &File) {
-    File.read(reinterpret_cast<char *>(&Hdr), sizeof(bflang::BfppImage));
+Image::Image(std::fstream &File) {
+    File.read(reinterpret_cast<char *>(&Hdr), sizeof(binary::Image));
     swapLEtoBE(Hdr.Magic);
     swapLEtoBE(Hdr.IpEntry);
     swapLEtoBE(Hdr.ApEntry);
 
-    if (Hdr.Magic != bflang::MAGIC)
+    if (Hdr.Magic != binary::MAGIC)
         throw std::runtime_error("Bad image magic code");
 
     for (uint8_t section = 0; section < Hdr.SectionNum; ++section)
         Sections.emplace_back(File);
 }
 
-BfppImage::BfppImage(uint8_t _Machine) {
-    Hdr.Magic = bflang::MAGIC;
-    Hdr.Machine = _Machine;
-    Hdr.HeaderSize = sizeof(bflang::BfppImage);
+Image::Image(binary::Machine _Machine) {
+    Hdr.Magic = binary::MAGIC;
+    Hdr.machine = _Machine;
+    Hdr.HeaderSize = sizeof(binary::Image);
     Hdr.SectionNum = 0;
     Hdr.flags = 0;
     Hdr.IpEntry = 0;
     Hdr.ApEntry = 0;
 }
 
-void BfppImage::AddSection(BfppSection &section) {
+void Image::AddSection(::Section &section) {
     Sections.push_back(section);
     Hdr.SectionNum = static_cast<uint8_t>(Sections.size());
 }
 
 
-void BfppImage::Write(std::fstream &File) {
+void Image::Write(std::fstream &File) {
     swapLEtoBE(Hdr.Magic);
     swapLEtoBE(Hdr.IpEntry);
     swapLEtoBE(Hdr.ApEntry);
-    Hdr.HeaderSize += sizeof(bflang::BfppSection) * Hdr.SectionNum;
-    File.write(reinterpret_cast<char *>(&Hdr), sizeof(bflang::BfppImage));
+    Hdr.HeaderSize += sizeof(binary::Section) * Hdr.SectionNum;
+    File.write(reinterpret_cast<char *>(&Hdr), sizeof(binary::Image));
 
     swapLEtoBE(Hdr.Magic);
     swapLEtoBE(Hdr.IpEntry);
@@ -145,9 +145,9 @@ void BfppImage::Write(std::fstream &File) {
         section.WriteData(File);
 }
 
-void BfppImage::LoadShared(uint16_t *data) {
+void Image::LoadShared(uint16_t *data) {
     for (uint8_t section = 0; section < SectionNum(); ++section) {
-        BfppSection CurrentSection = Section(section);
+        ::Section CurrentSection = GetSection(section);
         for (uint16_t mem = 0; mem < CurrentSection.MemorySize(); ++mem)
             data[CurrentSection.MemoryBase() + mem] = CurrentSection.GetData()[mem];
     }

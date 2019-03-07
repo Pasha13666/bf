@@ -11,24 +11,25 @@
 
 class Emulator {
 public:
-    explicit Emulator(const BfppImage &image);
+    explicit Emulator(const Image &image);
 
     void Run();
 
     bool ProtectedMode() { return protectedMode; }
-    bool WordMode() { return wordMode; }
+    binary::Machine Machine() { return machine; }
     bool Debug() { return debug; }
     bool Statistics() { return statistics; }
 
     void Statistics(bool mode) { statistics = mode; }
     void Debug(bool mode) { debug = mode; }
     void ProtectedMode(bool mode) { protectedMode = mode; }
-    void WordMode(bool mode) { wordMode = mode; }
+    void Machine(binary::Machine mode) { machine = mode; }
 
 private:
-    bool protectedMode = false, wordMode = false, debug = false, statistics = false;
-    BfppImage image;
+    bool protectedMode = false, debug = false, statistics = false;
+    Image image;
     std::array<uint16_t, 65536> memory {};
+    binary::Machine machine;
 
     uint16_t ip, ap;
 };

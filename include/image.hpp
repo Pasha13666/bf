@@ -11,12 +11,12 @@
 #include "formats.hpp"
 #include "command.hpp"
 
-class BfppSection {
+class Section {
 public:
-    BfppSection(std::vector<Command> &SectionCmd, uint16_t MemoryBase, uint16_t MemorySize);
-    BfppSection(std::vector<uint16_t> &SectionData, uint16_t MemoryBase, uint16_t MemorySize);
+    Section(std::vector<Command> &SectionCmd, uint16_t MemoryBase, uint16_t MemorySize);
+    Section(std::vector<uint16_t> &SectionData, uint16_t MemoryBase, uint16_t MemorySize);
 
-    explicit BfppSection(std::fstream &File);
+    explicit Section(std::fstream &File);
 
     uint8_t Type(){return Hdr.type;};
     uint16_t FileBase(){return Hdr.FileBase;};
@@ -30,29 +30,29 @@ public:
     uint16_t *GetData(){return Data.data();};
 
 private:
-    bflang::BfppSection Hdr;
+    binary::Section Hdr;
 
     std::vector<uint16_t> Data;
 };
 
-class BfppImage {
+class Image {
 public:
-    explicit BfppImage(std::fstream &File);
-    explicit BfppImage(uint8_t _machine);
+    explicit Image(std::fstream &File);
+    explicit Image(binary::Machine _machine);
 
-    ~BfppImage() = default;
+    ~Image() = default;
 
-    void AddSection(BfppSection &section);
+    void AddSection(Section &section);
     uint8_t SectionNum(){return Hdr.SectionNum;};
-    BfppSection &Section(uint8_t section){return Sections[section];};
+    Section &GetSection(uint8_t section){return Sections[section];};
 
     void IpEntry(uint16_t Ptr){Hdr.IpEntry = Ptr;};
     void ApEntry(uint16_t Ptr){Hdr.ApEntry = Ptr;};
-    void Machine(uint8_t Ptr){Hdr.Machine = Ptr;};
+    void Machine(binary::Machine Ptr){Hdr.machine = Ptr;};
     void Flags(uint8_t Ptr){Hdr.flags = Ptr;};
 
     uint8_t Flags(){return Hdr.flags;};
-    uint8_t Machine(){return Hdr.Machine;};
+    binary::Machine Machine(){return Hdr.machine;};
     uint16_t IpEntry(){return Hdr.IpEntry;};
     uint16_t ApEntry(){return Hdr.ApEntry;};
 
@@ -60,9 +60,9 @@ public:
     void LoadShared(uint16_t *data);
 
 private:
-    bflang::BfppImage Hdr;
+    binary::Image Hdr;
 
-    std::vector<BfppSection> Sections;
+    std::vector<::Section> Sections;
 };
 
 #endif //BF_IMAGE_HPP

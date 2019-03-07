@@ -110,7 +110,7 @@ int emulator_main(int argc, char **argv) {
             return 1;
         }
 
-        BfppImage img(input);
+        Image img(input);
         Emulator e(img);
 
         bool m8 = result["8bit"].as<bool>();
@@ -121,9 +121,9 @@ int emulator_main(int argc, char **argv) {
         }
 
         if (m8)
-            e.WordMode(false);
+            e.Machine(binary::MACHINE_8BIT);
         else if (m16)
-            e.WordMode(true);
+            e.Machine(binary::MACHINE_16BIT);
 
         if (result["protected"].as<bool>())
             e.ProtectedMode(true);

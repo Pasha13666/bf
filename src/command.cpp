@@ -2,119 +2,96 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // Created by pasha on 03.03.19.
 //
+#include <command.hpp>
+#include <stdexcept>
+
 #include "command.hpp"
 #include "formats.hpp"
 
 
-Command::Command(uint16_t _bin){
-    bias = bflang::COMMAND_BIAS(_bin);
-    switch (bflang::COMMAND_ID(_bin)){
-        case bflang::ADD:
-            cmd = '+';
-            break;
-        case bflang::ADA:
-            cmd = '>';
-            break;
-        case bflang::JZ:
-            cmd = '[';
-            break;
-        case bflang::JNZ:
-            cmd = ']';
-            break;
-
-        case bflang::CTRLIO:
-            cmd = ' ';
-            if (bflang::IS_NOP(static_cast<uint16_t>(bias)))
-                return;
-            if (bias & bflang::CIN)
-                cmd = ',';
-            if (bias & bflang::COUT)
-                cmd = '.';
-            if (bias & bflang::CLR_AP)
-                cmd = 'A';
-            if (bias & bflang::CLR_DATA)
-                cmd = 'D';
-            if (bias & bflang::M16)
-                cmd = 'F';
-            if (bias & bflang::M8)
-                cmd = 'L';
-            if (bias & bflang::CHALT)
-                cmd = 'H';
-        default:break;
-    }
-}
-
-Command::Command(char _cmd) : cmd(_cmd), bias(0){
-    fixBias();
-}
-
-Command::Command(char _cmd, int16_t _bias) : cmd(_cmd), bias(_bias) {
-    switch (cmd){
+Command::Command(char cmd, bytecode::Bias bias)  {
+    switch (cmd) {
         case '<':
-            bias = -bias;
-            cmd = '>';
-            break;
+            command = bytecode::COMMAND(bytecode::CommandId::ADA, static_cast<bytecode::Bias>(-bias));
+            return;
         case '-':
-            bias = -bias;
-            cmd = '+';
-            break;
-        default:break;
-    }
-    fixBias();
-}
-
-Command::Command(char _cmd, std::string label) : cmd(_cmd), label(std::move(label)) {
-    fixBias();
-}
-
-uint16_t Command::Id(){
-    switch (cmd){
+            command = bytecode::COMMAND(bytecode::CommandId::ADD, static_cast<bytecode::Bias>(-bias));
+            return;
         case '>':
-            return bflang::ADA;
+            command = bytecode::COMMAND(bytecode::CommandId::ADA, bias);
+            return;
         case '+':
-            return bflang::ADD;
+            command = bytecode::COMMAND(bytecode::CommandId::ADD, bias);
+            return;
         case '[':
-            return bflang::JZ;
+            command = bytecode::COMMAND(bytecode::CommandId::JZ, bias);
+            return;
         case ']':
-            return bflang::JNZ;
+            command = bytecode::COMMAND(bytecode::CommandId::JNZ, bias);
+            return;
+        case 'N':
+            command = COMMAND_C(bytecode::CtrlioBits::NOP);
+            return;
+        case '.':
+            command = COMMAND_C(bytecode::CtrlioBits::COUT);
+            return;
+        case 'C':
+            command = COMMAND_C(bytecode::CtrlioBits::CIN);
+            return;
+        case ',':
+            command = COMMAND_C(bytecode::CtrlioBits::SYNC);
+            return;
+        case 'D':
+            command = COMMAND_C(bytecode::CtrlioBits::CLR_DATA);
+            return;
+        case 'A':
+            command = COMMAND_C(bytecode::CtrlioBits::CLR_AP);
+            return;
+        case 'L':
+            command = COMMAND_C(bytecode::CtrlioBits::M8);
+            return;
+        case 'F':
+            command = COMMAND_C(bytecode::CtrlioBits::M16);
+            return;
+        case 'H':
+            command = COMMAND_C(bytecode::CtrlioBits::HALT);
+            return;
         default:
-            return bflang::CTRLIO;
+            throw std::runtime_error("Unknown command");
     }
 }
 
-uint16_t Command::GetCmd(){
-    return bflang::COMMAND(Id(), static_cast<uint16_t>(Bias() & 0x1FFF));
-}
+char Command::CmdChar() {
+    switch (bytecode::COMMAND_ID(command)){
+        case bytecode::CommandId::ADD:
+            return '+';
+        case bytecode::CommandId::ADA:
+            return '>';
+        case bytecode::CommandId::JZ:
+            return '[';
+        case bytecode::CommandId::JNZ:
+            return ']';
 
-void Command::fixBias() {
-    switch (cmd){
-        case 'D':
-            bias = bflang::CLR_DATA | 0x1000;
-            break;
-        case 'A':
-            bias = bflang::CLR_AP | 0x1000;
-            break;
-        case 'L':
-            bias = bflang::M8 | 0x1000;
-            break;
-        case 'F':
-            bias = bflang::M16 | 0x1000;
-            break;
-        case 'S':
-            bias = bflang::SYNC | 0x1000;
-            break;
-        case 's':
-            bias = bflang::CIN | 0x1000;
-            break;
-        case 'H':
-            bias = bflang::CHALT | 0x1000;
-            break;
-        case '.':
-            bias = bflang::COUT | 0x1000;
-            break;
-        case ',':
-            bias = bflang::CIN | bflang::SYNC | 0x1000;
-            break;
-        default:break;
+        case bytecode::CommandId::CTRLIO:
+            switch (bytecode::CTRLIO_BIT(bytecode::COMMAND_BIAS(command))) {
+                case bytecode::CtrlioBits::NOP:
+                    return 'N';
+                case bytecode::CtrlioBits::COUT:
+                    return '.';
+                case bytecode::CtrlioBits::CIN:
+                    return 'C';
+                case bytecode::CtrlioBits::SYNC:
+                    return ',';
+                case bytecode::CtrlioBits::CLR_DATA:
+                    return 'D';
+                case bytecode::CtrlioBits::CLR_AP:
+                    return 'A';
+                case bytecode::CtrlioBits::M8:
+                    return 'L';
+                case bytecode::CtrlioBits::M16:
+                    return 'F';
+                case bytecode::CtrlioBits::HALT:
+                    return 'H';
+            }
     }
 }

@@ -76,8 +76,8 @@ void Compiler::FindLoopEnd(std::vector<Command> &output, size_t CurrentIp) {
     }
 
     //We found loop ending:
-    output[NewIp].Bias(static_cast<int16_t>(CurrentIp - NewIp));
-    output[CurrentIp].Bias(static_cast<int16_t>(NewIp - CurrentIp));
+    output[NewIp].Bias(static_cast<bytecode::Bias>(CurrentIp - NewIp));
+    output[CurrentIp].Bias(static_cast<bytecode::Bias>(NewIp - CurrentIp));
 }
 
 void Compiler::OptimizeClear(std::vector<Command> &output) {
@@ -102,13 +102,13 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
 
 
     if (inf == Format::IMAGE) {
-        BfppImage img(in);
+        Image img(in);
         img.Write(out);
         return;
     }
 
     std::vector<Command> commands;
-    commands.emplace_back(' ', 0);
+    commands.emplace_back('N');
 
     if (inf == Format::ASSEMBLY) {
         AssemblyParser p {};
@@ -134,8 +134,8 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
         return;
     }
 
-    BfppImage img(0);
-    BfppSection code(commands, 0, static_cast<uint16_t>(commands.size() * 2));
+    Image img {binary::Machine::MACHINE_16BIT};
+    Section code(commands, 0, static_cast<uint16_t>(commands.size() * 2));
     img.AddSection(code);
     img.Write(out);
 }
@@ -144,9 +144,9 @@ void Compiler::WriteSource(std::vector<Command> &output, std::fstream &out) {
     for (auto i : output) {
         char ch = i.CmdChar();
         switch (i.Id()) {
-            case bflang::CTRLIO:
-            case bflang::JZ:
-            case bflang::JNZ:
+            case bytecode::CommandId::CTRLIO:
+            case bytecode::CommandId::JZ:
+            case bytecode::CommandId::JNZ:
                 out << ch;
                 break;
 
