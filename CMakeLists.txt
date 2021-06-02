@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(bf)
+project(bf CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -10,6 +10,7 @@ target_include_directories(bf PRIVATE include)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL GNU)
     target_link_libraries(bf stdc++fs)
-else()
+elseif(NOT "${CMAKE_BUILD_TOOL}" STREQUAL nmake)
+    # msvc and clang-over-msvc has builtin c++fs library
     target_link_libraries(bf c++fs)
 endif()
