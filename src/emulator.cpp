@@ -17,7 +17,7 @@ Emulator::Emulator(const Image &img) : image(img) {
 void Emulator::Run() {
     auto jumpMask = static_cast<uint16_t>(machine == binary::MACHINE_16BIT? 0xFFFF: 0xFF);
     unsigned long long executedInstructions = 0;
-    if (debug) {
+    if (verbose) {
         fprintf(stderr, "Sections: \n");
         for (uint8_t i = 0; i < image.SectionNum(); ++i) {
             Section &s = image.GetSection(i);
@@ -45,7 +45,7 @@ void Emulator::Run() {
 ip_ok:;
         }
 
-        if (debug) {
+        if (verbose) {
             fprintf(stderr, "%.4x %.4x %.4x   %-4s", ip, ap, memory[ap], bytecode::CMD_NAMES[(int)id]);
 
             if (id == bytecode::CommandId::CTRLIO)

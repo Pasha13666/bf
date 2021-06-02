@@ -37,7 +37,6 @@ private:
     void WriteSource(std::vector<Command>& output, std::fstream &out);
     void WriteHex(std::vector<Command>& output, std::fstream &out);
     void WriteAssembly(std::vector<Command>& output, std::fstream &out);
-    void ReadAssembly(std::vector<Command>& output, std::fstream &in);
 
     void Translate(std::istream &in, std::vector<Command>& output);
     void Linking(std::vector<Command>& output);

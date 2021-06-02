@@ -7,6 +7,7 @@
 #define BF_EMULATOR_HPP
 
 #include <memory>
+#include <array>
 #include "image.hpp"
 
 class Emulator {
@@ -17,16 +18,20 @@ public:
 
     bool ProtectedMode() { return protectedMode; }
     binary::Machine Machine() { return machine; }
-    bool Debug() { return debug; }
+    bool Verbose() { return verbose; }
     bool Statistics() { return statistics; }
 
     void Statistics(bool mode) { statistics = mode; }
-    void Debug(bool mode) { debug = mode; }
+    void Verbose(bool mode) { verbose = mode; }
     void ProtectedMode(bool mode) { protectedMode = mode; }
     void Machine(binary::Machine mode) { machine = mode; }
 
+    void Debug(const std::string &sock){
+
+    }
+
 private:
-    bool protectedMode = false, debug = false, statistics = false;
+    bool protectedMode = false, verbose = false, statistics = false;
     Image image;
     std::array<uint16_t, 65536> memory {};
     binary::Machine machine;
