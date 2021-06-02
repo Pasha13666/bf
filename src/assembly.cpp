@@ -66,7 +66,6 @@ void AssemblyParser::do_jnz(std::vector<::Command> &output, std::vector<const ch
 
 void AssemblyParser::Parse(std::vector<::Command> &output, std::fstream &in) {
     std::string line;
-    std::map<std::string, uint16_t> labels;
     size_t lineno = 0;
     std::vector<const char *> arguments;
 

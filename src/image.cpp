@@ -18,7 +18,7 @@ inline void swapLEtoBEa(void *a, size_t size) {
 #else
 
 inline void swapLEtoBE(uint16_t &a) {
-    a = (a << 8) | (a >> 8);
+    a = static_cast<uint16_t>(a << 8u) | static_cast<uint16_t>(a >> 8u);
 }
 
 inline void swapLEtoBEa(void *a, size_t size) {
@@ -76,11 +76,6 @@ void Section::WriteHeader(std::fstream &File) {
 
 void Section::WriteData(std::fstream &File) {
     std::streampos FileBase = File.tellp();
-    // Valgrind says:
-    //   Syscall param write(buf) points to uninitialised byte(s)
-    //   Address 0x4db2a22 is 18 bytes inside a block of size 8,192 alloc'd
-    //   std::basic_filebuf<char, std::char_traits<char> >::_M_allocate_internal_buffer()
-    // Bug in stdlib?
     File.seekg(Hdr.FileBase);
     Hdr.FileBase = static_cast<uint16_t>(FileBase); // XXX: ???
 
@@ -96,6 +91,13 @@ void Section::WriteData(std::fstream &File) {
         File.write(reinterpret_cast<char *>(Data.data()), Hdr.FileSize);
         swapLEtoBEa(Data.data(), Hdr.FileSize);
     }
+}
+
+Section::Section(uint16_t MemoryBase, uint16_t MemorySize) {
+    Hdr.MemoryBase = MemoryBase;
+    Hdr.MemorySize = MemorySize;
+    Hdr.FileSize = 0;
+    Hdr.type = binary::SECTION_DATA;
 }
 
 Image::Image(std::fstream &File) {

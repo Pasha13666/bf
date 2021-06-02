@@ -15,6 +15,7 @@ class Section {
 public:
     Section(std::vector<Command> &SectionCmd, uint16_t MemoryBase, uint16_t MemorySize);
     Section(std::vector<uint16_t> &SectionData, uint16_t MemoryBase, uint16_t MemorySize);
+    Section(uint16_t MemoryBase, uint16_t MemorySize);
 
     explicit Section(std::fstream &File);
 
@@ -30,9 +31,9 @@ public:
     uint16_t *GetData(){return Data.data();};
 
 private:
-    binary::Section Hdr;
+    binary::Section Hdr {};
 
-    std::vector<uint16_t> Data;
+    std::vector<uint16_t> Data {};
 };
 
 class Image {
@@ -60,9 +61,9 @@ public:
     void LoadShared(uint16_t *data);
 
 private:
-    binary::Image Hdr;
+    binary::Image Hdr {};
 
-    std::vector<::Section> Sections;
+    std::vector<::Section> Sections {};
 };
 
 #endif //BF_IMAGE_HPP
