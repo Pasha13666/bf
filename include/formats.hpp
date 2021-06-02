@@ -90,6 +90,20 @@ namespace bytecode {
 }
 
 namespace binary {
+    const char *const FORMAT_NAMES[4][4] = {
+            "bf", "bfk", "brainfuck", "source",
+            "bfa", "asm", "s", "assembly",
+            "hex", "c", "cpp", "txt",
+            "bfi", "img", "bin", "binary"
+    };
+
+    enum class Format {
+        SOURCE, // .bf, .bfk
+        ASSEMBLY, // .bfa
+        HEX, // .hex, .txt
+        IMAGE // .bfi, .bin
+    };
+
     // Bfpp binary file
     const uint16_t MAGIC = 0x4246;
     const uint16_t INDENT = 0x10;

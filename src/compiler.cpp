@@ -93,15 +93,15 @@ void Compiler::OptimizeClear(std::vector<Command> &output) {
     }
 }
 
-void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out, Compiler::Format of) {
-    if (inf == Format::HEX)
+void Compiler::Compile(std::fstream &in, binary::Format inf, std::fstream &out, binary::Format of) {
+    if (inf == binary::Format::HEX)
         throw std::runtime_error("Cannot use hex file as input");
 
-    if (inf == Format::IMAGE && of != Format::IMAGE)
+    if (inf == binary::Format::IMAGE && of != binary::Format::IMAGE)
         throw std::runtime_error("Image can be converted only to image");
 
 
-    if (inf == Format::IMAGE) {
+    if (inf == binary::Format::IMAGE) {
         Image img(in);
         img.Write(out);
         return;
@@ -110,7 +110,7 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
     std::vector<Command> commands;
     commands.emplace_back('N');
 
-    if (inf == Format::ASSEMBLY) {
+    if (inf == binary::Format::ASSEMBLY) {
         AssemblyParser p {};
         p.Parse(commands, in);
     } else Translate(in, commands);
@@ -119,17 +119,17 @@ void Compiler::Compile(std::fstream &in, Compiler::Format inf, std::fstream &out
         OptimizeClear(commands);
     Linking(commands);
 
-    if (of == Format::SOURCE) {
+    if (of == binary::Format::SOURCE) {
         WriteSource(commands, out);
         return;
     }
 
-    if (of == Format::ASSEMBLY) {
+    if (of == binary::Format::ASSEMBLY) {
         WriteAssembly(commands, out);
         return;
     }
 
-    if (of == Format::HEX) {
+    if (of == binary::Format::HEX) {
         WriteHex(commands, out);
         return;
     }

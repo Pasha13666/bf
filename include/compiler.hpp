@@ -9,24 +9,23 @@
 #include <fstream>
 #include "image.hpp"
 
-const char *const FORMAT_NAMES[4][4] = {
-        "bf", "bfk", "brainfuck", "source",
-        "bfa", "asm", "s", "assembly",
-        "hex", "c", "cpp", "hex",
-        "bfi", "img", "bin", "binary"
-};
-
 class Compiler {
 public:
-    enum class Format {
-        SOURCE, // .bf, .bfk, .bfe, .bfpp
-        ASSEMBLY, // .bfa
-        HEX, // .hex, .txt
-        IMAGE // .bfi, a.out
-    };
 
     Compiler() = default;
-    void Compile(std::fstream &in, Format inf, std::fstream &out, Format of);
+
+    /*       Out SOURCE ASSEMBLY HEX IMAGE
+     *    In    *-------------------------
+     *   SOURCE |  V       N      V    V
+     * ASSEMBLY |  V       N      V    V
+     *      HEX |  X       X      X    X
+     *    IMAGE |  X       X      X    V
+     *
+     *    V - Supported
+     *    X - Not supported
+     *    N - Not implemented
+     */
+    void Compile(std::fstream &in, binary::Format inf, std::fstream &out, binary::Format of);
 
     bool OptimizeClearing(){ return optimizeClearing; }
     bool OptimizeJoining(){ return optimizeJoining; }
