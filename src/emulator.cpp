@@ -41,29 +41,16 @@ void Emulator::Run() {
                 if (s.Type() == binary::SECTION_CODE && ip >= s.MemoryBase() && ip < s.MemoryBase() + s.MemorySize())
                     goto ip_ok;
             }
-            fprintf(stderr, "Memory access violation: trying to execute data.\n");
-            goto end;
-ip_ok:
-            for (uint8_t i = 0; i < image.SectionNum(); ++i) {
-                auto &s = image.GetSection(i);
-                if (s.Type() == binary::SECTION_CODE && ap >= s.MemoryBase() && ap < s.MemoryBase() + s.MemorySize()) {
-                    fprintf(stderr, "Memory access violation: AP points to code.\n");
-                    fprintf(stderr, "Note: Ignore this error if program works normally without --protected option.\n");
-                    goto end;
-                }
-            }
+            throw std::runtime_error("Memory access violation: trying to execute data");
+ip_ok:;
         }
 
         if (debug) {
             fprintf(stderr, "%.4x %.4x %.4x   %-4s", ip, ap, memory[ap], bytecode::CMD_NAMES[(int)id]);
 
-            if (id != bytecode::CommandId::CTRLIO)
-                fprintf(stderr, " %4i", *reinterpret_cast<int16_t*>(&bias));
-            else
-                for (int i = 0; i < 12; ++i)
-                    if (bias & (1U << i))
-                        fprintf(stderr, " %s", bytecode::CTRLIO_BITS_NAMES[i]);
-            fprintf(stderr, "\n");
+            if (id == bytecode::CommandId::CTRLIO)
+                fprintf(stderr, " %s\n", bytecode::CTRLIO_BITS_NAMES[(int) bytecode::CTRLIO_BIT(bias)]);
+            else fprintf(stderr, " %4i\n", *reinterpret_cast<int16_t *>(&bias));
         }
 
         switch (id) {
@@ -73,18 +60,22 @@ ip_ok:
                     case bytecode::CtrlioBits::NOP:break;
 
                     case bytecode::CtrlioBits::COUT:
+                        if (protectedMode) checkAp();
                         putchar(memory[ap] & 0xFF);
                         break;
 
                     case bytecode::CtrlioBits::CIN:
+                        if (protectedMode) checkAp();
                         memory[ap] = getchar() & 0xFF;
                         break;
 
                     case bytecode::CtrlioBits::SYNC:
+                        if (protectedMode) checkAp();
                         memory[ap] = getchar() & 0xFF;
                         break;
 
                     case bytecode::CtrlioBits::CLR_DATA:
+                        if (protectedMode) checkAp();
                         memory[ap] = 0;
                         break;
 
@@ -107,16 +98,19 @@ ip_ok:
                 }
                 break;
             case bytecode::CommandId::ADD:
+                if (protectedMode) checkAp();
                 memory[ap] += bias;
                 break;
             case bytecode::CommandId::ADA:
                 ap += bias;
                 break;
             case bytecode::CommandId::JZ:
+                if (protectedMode) checkAp();
                 if ((memory[ap] & jumpMask) == 0)
                     ip += bias;
                 break;
             case bytecode::CommandId::JNZ:
+                if (protectedMode) checkAp();
                 if ((memory[ap] & jumpMask) != 0)
                     ip += bias;
                 break;
@@ -131,5 +125,14 @@ end:;
     if (statistics) {
         fprintf(stderr, "Executed %llu instructions.\n", executedInstructions);
     }
+}
+
+void Emulator::checkAp() {
+    for (uint8_t i = 0; i < image.SectionNum(); ++i) {
+        auto &s = image.GetSection(i);
+        if (s.Type() == binary::SECTION_DATA && ap >= s.MemoryBase() && ap < s.MemoryBase() + s.MemorySize())
+            return;
+    }
+    throw std::runtime_error("Memory access violation: AP outs of data");
 }
 

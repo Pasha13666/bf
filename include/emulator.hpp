@@ -32,6 +32,8 @@ private:
     binary::Machine machine;
 
     uint16_t ip, ap;
+
+    void checkAp();
 };
 
 #endif //BF_EMULATOR_HPP
