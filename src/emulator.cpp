@@ -65,10 +65,6 @@ ip_ok:;
                         break;
 
                     case bytecode::CtrlioBits::CIN:
-                        if (protectedMode) checkAp();
-                        memory[ap] = getchar() & 0xFF;
-                        break;
-
                     case bytecode::CtrlioBits::SYNC:
                         if (protectedMode) checkAp();
                         memory[ap] = getchar() & 0xFF;

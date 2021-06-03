@@ -135,8 +135,11 @@ void Compiler::Compile(std::fstream &in, binary::Format inf, std::fstream &out, 
     }
 
     Image img {binary::Machine::MACHINE_16BIT};
-    Section code(commands, 0, static_cast<uint16_t>(commands.size() * 2));
+    auto csize = static_cast<uint16_t>(commands.size());
+    Section code(commands, 0, csize);
+    Section data(csize, binary::MEMORY_PTR_MAX - csize);
     img.AddSection(code);
+    img.AddSection(data);
     img.Write(out);
 }
 

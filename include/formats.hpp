@@ -134,8 +134,8 @@ namespace binary {
         uint16_t MemoryBase; // Physical address to load
         uint16_t FileSize; // How much Bytes of data can be loaded to memory
         uint16_t MemorySize; // How much Words in Memory should be allocated
-        SectionType type;
-        uint8_t _pad;
+        SectionType type; // TODO: swap this
+        [[maybe_unused]] uint8_t _pad;
     };
 }
 
