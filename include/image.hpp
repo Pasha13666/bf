@@ -19,11 +19,11 @@ public:
 
     explicit Section(std::fstream &File);
 
-    uint8_t Type(){return Hdr.type;};
-    uint16_t FileBase(){return Hdr.FileBase;};
-    uint16_t MemoryBase(){return Hdr.MemoryBase;};
-    uint16_t FileSize(){return Hdr.FileSize;};
-    uint16_t MemorySize(){return Hdr.MemorySize;};
+    [[nodiscard]] uint8_t Type() const {return Hdr.type;};
+    [[nodiscard]] uint16_t FileBase() const {return Hdr.FileBase;};
+    [[nodiscard]] uint16_t MemoryBase() const {return Hdr.MemoryBase;};
+    [[nodiscard]] uint16_t FileSize() const {return Hdr.FileSize;};
+    [[nodiscard]] uint16_t MemorySize() const {return Hdr.MemorySize;};
 
     void WriteHeader(std::fstream &File);
     void WriteData(std::fstream &File);
@@ -39,12 +39,12 @@ private:
 class Image {
 public:
     explicit Image(std::fstream &File);
-    explicit Image(binary::Machine _machine);
+    explicit Image(binary::Machine Machine);
 
     ~Image() = default;
 
     void AddSection(Section &section);
-    uint8_t SectionNum(){return Hdr.SectionNum;};
+    [[nodiscard]] uint8_t SectionNum() const {return Hdr.SectionNum;};
     Section &GetSection(uint8_t section){return Sections[section];};
 
     void IpEntry(uint16_t Ptr){Hdr.IpEntry = Ptr;};
@@ -52,10 +52,10 @@ public:
     void Machine(binary::Machine Ptr){Hdr.machine = Ptr;};
     void Flags(uint8_t Ptr){Hdr.flags = Ptr;};
 
-    uint8_t Flags(){return Hdr.flags;};
-    binary::Machine Machine(){return Hdr.machine;};
-    uint16_t IpEntry(){return Hdr.IpEntry;};
-    uint16_t ApEntry(){return Hdr.ApEntry;};
+    [[nodiscard]] uint8_t Flags() const {return Hdr.flags;};
+    [[nodiscard]] binary::Machine Machine() const {return Hdr.machine;};
+    [[nodiscard]] uint16_t IpEntry() const {return Hdr.IpEntry;};
+    [[nodiscard]] uint16_t ApEntry() const {return Hdr.ApEntry;};
 
     void Write(std::fstream &File);
     void LoadShared(uint16_t *data);

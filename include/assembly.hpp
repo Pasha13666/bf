@@ -13,10 +13,9 @@
 
 class AssemblyParser {
 public:
-    void Parse(std::vector<::Command> &output, std::fstream &in);
+    void Parse(std::vector<::Command> &output, std::istream &in);
 
 private:
-    constexpr static const char *spaces = " \n\r\t";
     using Handler = void (AssemblyParser::*)(std::vector<::Command> &output, std::vector<const char*> line, size_t lineno);
 
 

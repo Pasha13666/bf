@@ -61,7 +61,7 @@ Command::Command(char cmd, bytecode::Bias bias)  {
     }
 }
 
-char Command::CmdChar() {
+char Command::CmdChar() const {
     switch (bytecode::COMMAND_ID(command)){
         case bytecode::CommandId::ADD:
             return '+';

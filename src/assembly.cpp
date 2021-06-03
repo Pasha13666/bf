@@ -6,7 +6,6 @@
 #include "compiler.hpp"
 #include <cstring>
 #include <algorithm>
-#include <fstream>
 
 
 const AssemblyParser::Command AssemblyParser::commands[] = {
@@ -64,7 +63,7 @@ void AssemblyParser::do_jnz(std::vector<::Command> &output, std::vector<const ch
     } else output.emplace_back(']', parseBias(args, false, lineno));
 }
 
-void AssemblyParser::Parse(std::vector<::Command> &output, std::fstream &in) {
+void AssemblyParser::Parse(std::vector<::Command> &output, std::istream &in) {
     std::string line;
     size_t lineno = 0;
     std::vector<const char *> arguments;

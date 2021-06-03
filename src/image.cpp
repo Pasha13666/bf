@@ -113,9 +113,9 @@ Image::Image(std::fstream &File) {
         Sections.emplace_back(File);
 }
 
-Image::Image(binary::Machine _Machine) {
+Image::Image(binary::Machine Machine) {
     Hdr.Magic = binary::MAGIC;
-    Hdr.machine = _Machine;
+    Hdr.machine = Machine;
     Hdr.HeaderSize = sizeof(binary::Image);
     Hdr.SectionNum = 0;
     Hdr.flags = 0;
@@ -126,6 +126,7 @@ Image::Image(binary::Machine _Machine) {
 void Image::AddSection(::Section &section) {
     Sections.push_back(section);
     Hdr.SectionNum = static_cast<uint8_t>(Sections.size());
+    Hdr.HeaderSize = sizeof(binary::Image) + sizeof(binary::Section) * Hdr.SectionNum;
 }
 
 
@@ -133,7 +134,7 @@ void Image::Write(std::fstream &File) {
     swapLEtoBE(Hdr.Magic);
     swapLEtoBE(Hdr.IpEntry);
     swapLEtoBE(Hdr.ApEntry);
-    Hdr.HeaderSize += sizeof(binary::Section) * Hdr.SectionNum;
+
     File.write(reinterpret_cast<char *>(&Hdr), sizeof(binary::Image));
 
     swapLEtoBE(Hdr.Magic);

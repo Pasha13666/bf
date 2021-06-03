@@ -16,10 +16,10 @@ public:
 
     void Run();
 
-    bool ProtectedMode() { return protectedMode; }
+    [[nodiscard]] bool ProtectedMode() const { return protectedMode; }
     binary::Machine Machine() { return machine; }
-    bool Verbose() { return verbose; }
-    bool Statistics() { return statistics; }
+    [[nodiscard]] bool Verbose() const { return verbose; }
+    [[nodiscard]] bool Statistics() const { return statistics; }
 
     void Statistics(bool mode) { statistics = mode; }
     void Verbose(bool mode) { verbose = mode; }

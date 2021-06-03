@@ -24,7 +24,7 @@ public:
         this->label = std::move(label);
     }
 
-    char CmdChar();
+    [[nodiscard]] char CmdChar() const;
 
     void Label(std::string l){label = std::move(l);};
     std::string Label(){return label;};
@@ -33,9 +33,9 @@ public:
         command = bytecode::COMMAND(bytecode::COMMAND_ID(command), bias);
     };
 
-    bytecode::Bias Bias(){ return bytecode::COMMAND_BIAS(command); }
-    bytecode::CommandId Id() { return bytecode::COMMAND_ID(command); }
-    bytecode::Command GetCmd() { return command; }
+    [[nodiscard]] bytecode::Bias Bias() const{ return bytecode::COMMAND_BIAS(command); }
+    [[nodiscard]] bytecode::CommandId Id() const { return bytecode::COMMAND_ID(command); }
+    [[nodiscard]] bytecode::Command GetCmd() const { return command; }
 
 };
 

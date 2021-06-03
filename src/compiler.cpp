@@ -15,7 +15,7 @@ inline bool IsSymbol(char ch) {
            || (ch == '[') || (ch == ']') || (ch == '.') || (ch == ',');
 }
 
-void Compiler::Translate(std::istream &in, std::vector<Command> &output) {
+void Compiler::Translate(std::istream &in, std::vector<Command> &output) const {
     output.emplace_back('>', 0x0800);
 
     size_t CurrentBias = 0;
@@ -47,7 +47,7 @@ void Compiler::Translate(std::istream &in, std::vector<Command> &output) {
 }
 
 void Compiler::Linking(std::vector<Command> &output) {
-    size_t CurrentIp = 0;
+    size_t CurrentIp;
     size_t MaxIp = output.size();
 
     for (CurrentIp = 0; CurrentIp < MaxIp; CurrentIp++)
@@ -141,7 +141,7 @@ void Compiler::Compile(std::fstream &in, binary::Format inf, std::fstream &out, 
 }
 
 void Compiler::WriteSource(std::vector<Command> &output, std::fstream &out) {
-    for (auto i : output) {
+    for (const auto& i : output) {
         char ch = i.CmdChar();
         switch (i.Id()) {
             case bytecode::CommandId::CTRLIO:
@@ -151,7 +151,7 @@ void Compiler::WriteSource(std::vector<Command> &output, std::fstream &out) {
                 break;
 
             default:
-                int16_t bias = i.Bias();
+                int bias = i.Bias();
                 if (bias < 0) {
                     switch (ch) {
                         case '+':
