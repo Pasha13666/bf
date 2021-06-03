@@ -39,13 +39,13 @@ int compiler_main(int argc, char **argv) {
             return 0;
         }
 
-        std::fstream input(result["input"].as<std::filesystem::path>(), std::ios::in);
+        std::fstream input(result["input"].as<std::filesystem::path>(), std::ios::in | std::ios::binary);
         if (!input.good()) {
             std::cerr << "Cannot read input file" << std::endl;
             return 1;
         }
 
-        std::fstream output(result["output"].as<std::filesystem::path>(), std::ios::out);
+        std::fstream output(result["output"].as<std::filesystem::path>(), std::ios::out | std::ios::binary);
         if (!output.good()) {
             std::cerr << "Cannot write output file" << std::endl;
             return 1;

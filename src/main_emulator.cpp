@@ -31,7 +31,7 @@ int emulator_main(int argc, char **argv) {
             return 0;
         }
 
-        std::fstream input(result["input"].as<std::string>(), std::ios::in);
+        std::fstream input(result["input"].as<std::string>(), std::ios::in | std::ios::binary);
         if (!input.good()) {
             std::cerr << "Cannot read input file" << std::endl;
             return 1;
