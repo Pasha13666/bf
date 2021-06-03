@@ -87,8 +87,8 @@ void Compiler::OptimizeClear(std::vector<Command> &output) {
             && (i + 1)->CmdChar() == '+'
             && (i + 2)->CmdChar() == ']') {
 
-            output.erase(i, i + 3);
-            output.insert(i, Command{'D'});
+            i = output.erase(i, i + 3);
+            i = output.insert(i, Command{'D'});
         }
     }
 }
